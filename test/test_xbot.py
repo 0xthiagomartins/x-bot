@@ -1,19 +1,21 @@
-from src.driver import DriverInitializer
-from src.service import XBot
 import pytest
+from src.service import XBot
+from src.driver import DriverInitializer
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def driver_manager():
-    return DriverInitializer()
+    manager = DriverInitializer()
+    yield manager
+    manager.driver.quit()  # Clean up after all tests
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def driver(driver_manager):
     return driver_manager.driver
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def xbot(driver):
     return XBot(driver)
 
@@ -24,10 +26,12 @@ def test_login(xbot):
 
 
 def test_get_followers(xbot):
+    xbot.go_to_profile("0xthiagomartins")
     followers = xbot.get_followers()
     assert len(followers) > 0
 
 
 def test_get_following(xbot):
+    xbot.go_to_profile("0xthiagomartins")
     following = xbot.get_following()
     assert len(following) > 0
