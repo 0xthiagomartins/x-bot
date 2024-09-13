@@ -86,7 +86,7 @@ class XBot:
                 break
             self.last_height = new_height
 
-    def unfollow(self, user_cell, attempt=1):
+    def unfollow(self, user_cell, c=1, attempt=1):
         print(f"Unfollow Attempt {attempt}")
         unfollow_button = user_cell.find_elements(
             By.XPATH, ".//span[contains(text(), 'Following')]"
@@ -106,16 +106,17 @@ class XBot:
                 sleep(0.25)
             except ElementClickInterceptedException:
                 self.driver.execute_script(
-                    f"window.scrollTo(0, {user_cell.location['y']-(user_cell.size['height']*(1+(attempt/5)))});"
+                    f"window.scrollTo(0, {c*user_cell.location['y']-(user_cell.size['height']*(1+(attempt/5)))});"
                 )
                 sleep(1.25)
-                self.unfollow(user_cell, attempt + 1)
+                self.unfollow(user_cell, c, attempt + 1)
 
     def unfollow_all_non_followers(self):
         username = os.getenv("TWITTER_USERNAME")
+        self.driver.get(f"https://x.com/{username}/following")
+        sleep(3.5)
+        c = 1
         while True:
-            self.driver.get(f"https://x.com/{username}/following")
-            sleep(3.5)
             user_cells = self.driver.find_elements(
                 By.XPATH,
                 '//*[@id="react-root"]/div/div/div[2]/main/div/div/div/div[1]/div/section/div/div/*',
@@ -132,7 +133,7 @@ class XBot:
             for i in range(0, len(user_cells)):
                 user_cell = user_cells[i]
                 self.driver.execute_script(
-                    f"window.scrollTo(0, {user_cell.location['y']-user_cell.size['height']});"
+                    f"window.scrollTo(0, {c*user_cell.location['y']-user_cell.size['height']});"
                 )
                 sleep(1)
                 follows_you_tag = user_cell.find_elements(
@@ -141,5 +142,6 @@ class XBot:
                 )
                 print(f"Follows you tag found: {bool(follows_you_tag)}")
                 if not follows_you_tag:
-                    self.unfollow(user_cell)
+                    self.unfollow(user_cell, c=c)
                     sleep(1)
+            c += 0
